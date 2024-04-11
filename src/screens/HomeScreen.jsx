@@ -1,10 +1,17 @@
 import { View } from "react-native";
-import { Text } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 
-export default function HomeScreen() {
+export default function HomeScreen({navigation}) {
   return (
     <View>
       <Text>Bem vinda(o) ao app Maneiro</Text>
+      <Button 
+        onPress={() => {
+          navigation.navigate("LoginScreen");
+        }}
+      >
+        Logout
+     </Button>
     </View>
   );
 }
