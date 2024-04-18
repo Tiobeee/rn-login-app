@@ -10,30 +10,36 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-      <Stack.Screen
+        {/* <Stack.Screen
+          name="RegisterScreen"
+          component={RegisterScreen}
+          options={{
+            title: "Inicial",
+          }}
+        /> */}
+
+        <Stack.Screen
+          name="HomeScreen"
+          component={HomeScreen}
+          options={
+            {
+              title: "Tela Inicial",
+            }
+          }
+        />
+        <Stack.Screen
           name="RegisterScreen"
           component={RegisterScreen}
           options={{
             title: "Inicial",
           }}
         />
-
-        <Stack.Screen 
-            name="HomeScreen" 
-            component={HomeScreen}
-            options={
-                {
-                title: "Tela Inicial",
-                }
-            }
-        />
-         
-        <Stack.Screen 
-            name="LoginScreen" 
-            component={LoginScreen} 
-            options={{
-                title: "Login",
-            }}
+        <Stack.Screen
+          name="LoginScreen"
+          component={LoginScreen}
+          options={{
+            title: "Login",
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>
