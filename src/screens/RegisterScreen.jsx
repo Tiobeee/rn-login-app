@@ -12,19 +12,59 @@ export default function RegisterScreen({ navigation }) {
   const [cep, setCep] = useState("");
   const [cidade, setCidade] = useState("");
   const [estado, setEstado] = useState("");
-  const [erro, setErro] = useState("");
+  const [erro, setErro] = useState({
+    email: false,
+    senha: false,
+    repetirSenha: false,
+    nome: false,
+    cep: false,
+    cidade: false,
+    estado: false,
+  });
   // Nome, Email, Senha, Repetir Senha
   // Endereço: Logradouro, CEP, Cidade, Estado
 
   function realizaRegistro() {
-    const x = {nome, email, senha, repetirSenha, logradouro, cep, cidade, estado}
-    if (x.trim() === "" ) {
-      console.log("Preencha os campo direito ai namoral");
-      alert("PREENCHA OS CAMPOSSSSS");
-      return false;
-    } else {
-      return true;
+    if (nome === "") {
+      setErro({ ...erro, nome: true });
+      return;
     }
+    setErro({ ...erro, nome: false });
+    if (email === "") {
+      setErro({ ...erro, email: true });
+      return;
+    }
+    setErro({ ...erro, email: false });
+    if (senha === "") {
+      setErro({ ...erro, senha: true });
+      return;
+    }
+    setErro({ ...erro, senha: false });
+    if (repetirSenha === "") {
+      setErro({ ...erro, repetirSenha: true });
+      return;
+    }
+    setErro({ ...erro, repetirSenha: false });
+    if (cep === "") {
+      setErro({ ...erro, cep: true });
+      return;
+    }
+    setErro({ ...erro, cep: false });
+    if (cidade === "") {
+      setErro({ ...erro, cidade: true });
+      return;
+    }
+    setErro({ ...erro, cidade: false });
+    if (estado === "") {
+      setErro({ ...erro, estado: true });
+      return;
+    }
+    setErro({ ...erro, estado: false });
+
+    // 2) Validar se as senhas são iguais
+    // 3) Enviar os dados para a API do Firestore junto ao Firebase Auth
+    // 4) Tratar os erros
+    // 5) Redirecionar para a tela de Login
   }
 
   function buscaCEP() {
@@ -58,12 +98,14 @@ export default function RegisterScreen({ navigation }) {
             placeholder="Digite seu nome:"
             onChangeText={setNome}
             value={nome}
+            error={erro.nome}
           />
           <TextInput
             style={styles.input}
             placeholder="Digite seu e-mail:"
             onChangeText={setEmail}
             value={email}
+            error={erro.email}
           />
           <TextInput
             style={styles.input}
@@ -71,6 +113,7 @@ export default function RegisterScreen({ navigation }) {
             onChangeText={setSenha}
             value={senha}
             secureTextEntry // faz com que o campo seja senha com *
+            error={erro.senha}
           />
           <TextInput
             style={styles.input}
@@ -78,6 +121,7 @@ export default function RegisterScreen({ navigation }) {
             onChangeText={setRepetirSenha}
             value={repetirSenha}
             secureTextEntry // faz com que o campo seja senha com *
+            error={erro.repetirSenha}
           />
           <View
             style={{
@@ -93,12 +137,14 @@ export default function RegisterScreen({ navigation }) {
               onBlur={buscaCEP} // quando o campo perde o foco, busca o CEP
               keyboardType="numeric" // abre o teclado numérico no celular
               maxLength={8} // máximo de 8 caracteres
+              error={erro.cep}
             />
             <TextInput
               style={styles.input}
               placeholder="Digite seu logradouro:"
               onChangeText={setLogradouro}
               value={logradouro}
+              error={erro.logradouro}
             />
           </View>
           <View
@@ -115,6 +161,7 @@ export default function RegisterScreen({ navigation }) {
               placeholder="cidade:"
               onChangeText={setCidade}
               value={cidade}
+              error={erro.cidade}
             />
             <TextInput
               placeholder="Estado:"
@@ -125,6 +172,7 @@ export default function RegisterScreen({ navigation }) {
                 width: "30%",
               }}
               maxLength={2} // máximo de 2 caracteres
+              error={erro.estado}
             />
           </View>
           <Button onPress={realizaRegistro} mode="outlined">
