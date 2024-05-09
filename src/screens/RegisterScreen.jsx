@@ -3,6 +3,10 @@ import { Button, Text, TextInput } from "react-native-paper";
 import { useState } from "react";
 import { styles } from "../config/styles";
 
+import { auth } from "../config/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+
+
 export default function RegisterScreen({ navigation }) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -27,44 +31,67 @@ export default function RegisterScreen({ navigation }) {
   function realizaRegistro() {
     if (nome === "") {
       setErro({ ...erro, nome: true });
-      return;
+      return 0;
     }
     setErro({ ...erro, nome: false });
     if (email === "") {
       setErro({ ...erro, email: true });
-      return;
+      return 0;
     }
     setErro({ ...erro, email: false });
     if (senha === "") {
       setErro({ ...erro, senha: true });
-      return;
+      return 0;
     }
     setErro({ ...erro, senha: false });
     if (repetirSenha === "") {
       setErro({ ...erro, repetirSenha: true });
-      return;
+      return 0;
     }
     setErro({ ...erro, repetirSenha: false });
     if (cep === "") {
       setErro({ ...erro, cep: true });
-      return;
+      return 0;
     }
     setErro({ ...erro, cep: false });
     if (cidade === "") {
       setErro({ ...erro, cidade: true });
-      return;
+      return 0;
     }
     setErro({ ...erro, cidade: false });
     if (estado === "") {
       setErro({ ...erro, estado: true });
-      return;
+      return 0;
     }
     setErro({ ...erro, estado: false });
 
     // 2) Validar se as senhas são iguais
+    if (senha !== repetirSenha) {
+      setErro({ ...erro, senha: true, repetirSenha: true });
+      alert("Senhas não tao igual!!");
+      return;
+    }
+    setErro({ ...erro, senha: false, repetirSenha: false });
+    navigation.navigate("LoginScreen"); 
+
+    cadastrarNoFirebase();
     // 3) Enviar os dados para a API do Firestore junto ao Firebase Auth
     // 4) Tratar os erros
     // 5) Redirecionar para a tela de Login
+  }
+
+  async function cadastrarNoFirebase() {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        senha
+      );
+      const user = userCredential.user;
+      console.log("Usuario criado com sucesso:", user);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   function buscaCEP() {
