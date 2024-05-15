@@ -1,7 +1,12 @@
+import { setDoc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { useState } from "react";
 import { View } from "react-native";
 import { Button, Text, Surface, TextInput } from "react-native-paper";
 import { styles } from "../config/styles";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { db } from '../config/firebase';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -15,16 +20,38 @@ export default function LoginScreen({ navigation }) {
     console.log("Fazer Login");
     if (email === "") {
       setErro({ ...erro, email: true });
+      return;
     } else {
       setErro({ ...erro, email: false });
     }
     if (senha === "") {
-      setErro({...erro, senha: true});
+      setErro({ ...erro, senha: true });
+      return;
     } else {
-      setErro({...erro, senha: false});
+      setErro({ ...erro, senha: false });
+    }
+    realizaLoginNoFirebase();
+  }
+
+  async function realizaLoginNoFirebase() {
+    try {
+      const usuarioRef = await signInWithEmailAndPassword(auth, email, senha);
+      const user = usuarioRef.user;
+      console.log("Usuário cadastrado", user);
+      const collectionRef = collection(db, "usuarios");
+      const docRef = await setDoc(doc(collectionRef, user.uid), {
+        nome: nome,
+          logradouro: logradouro,
+          cep: cep,
+          cidade: cidade,
+          estado: estado,
+      });
+    } catch (e) {
+      console.error(e);
+      
     }
   }
-  
+
   return (
     <Surface style={styles.container}>
       <View style={styles.innerContainer}>
@@ -64,4 +91,3 @@ export default function LoginScreen({ navigation }) {
     </Surface>
   );
 }
-
