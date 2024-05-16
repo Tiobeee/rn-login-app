@@ -1,11 +1,11 @@
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
+import { Button, Modal, Portal, Surface, Text, TextInput } from "react-native-paper";
 import { useState } from "react";
 import { styles } from "../config/styles";
 
 import { auth } from "../config/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-
+import { collection, doc, setDoc } from "firebase/firestore";
 
 export default function RegisterScreen({ navigation }) {
   const [nome, setNome] = useState("");
@@ -25,8 +25,12 @@ export default function RegisterScreen({ navigation }) {
     cidade: false,
     estado: false,
   });
-  // Nome, Email, Senha, Repetir Senha
-  // Endereço: Logradouro, CEP, Cidade, Estado
+
+  const [visible, setVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const showModal = () => setVisible(true);
+  const hideModal = () => setVisible(false);
 
   function realizaRegistro() {
     if (nome === "") {
@@ -72,7 +76,7 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
     setErro({ ...erro, senha: false, repetirSenha: false });
-    navigation.navigate("LoginScreen"); 
+    navigation.navigate("LoginScreen");
 
     cadastrarNoFirebase();
     // 3) Enviar os dados para a API do Firestore junto ao Firebase Auth
@@ -89,8 +93,29 @@ export default function RegisterScreen({ navigation }) {
       );
       const user = userCredential.user;
       console.log("Usuario criado com sucesso:", user);
+      const collectionRef = collection(db, "usuarios");
+
+      // agora eu vou fazer a inserção dos dados
+      // o primeiro parâmetro é a referência da coleção
+      // o segundo é o documento
+      // o terceiro é os dados que eu quero inserir
+      await setDoc(doc(collectionRef, user.uid), {
+        nome: nome,
+        logradouro: logradouro,
+        cep: cep,
+        cidade: cidade,
+        estado: estado,
+      });
+
+      // Redireciona para a tela de login após o cadastro bem-sucedido
+      navigation.navigate("LoginScreen");
     } catch (error) {
-      console.error(error);
+      if (error.code === "auth/email-already-in-use") {
+        setErrorMessage("Email já está cadastrado.");
+      } else {
+        setErrorMessage("Erro ao cadastrar usuário: " + error.message);
+      }
+      showModal();
     }
   }
 
@@ -109,7 +134,8 @@ export default function RegisterScreen({ navigation }) {
       .catch((erro) => {
         //se der erro, vai pra ca
         console.error(erro);
-        setErro("CEP não encontrado");
+        setErrorMessage("CEP não encontrado");
+        showModal();
       });
 
     //
@@ -117,99 +143,115 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <ScrollView>
-      <View style={styles.container}>
+      <Surface style={styles.container}>
         <View style={styles.innerContainer}>
-          <Text style={styles.textin}>Faça seu Registro:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Digite seu nome:"
-            onChangeText={setNome}
-            value={nome}
-            error={erro.nome}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Digite seu e-mail:"
-            onChangeText={setEmail}
-            value={email}
-            error={erro.email}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Digite sua senha:"
-            onChangeText={setSenha}
-            value={senha}
-            secureTextEntry // faz com que o campo seja senha com *
-            error={erro.senha}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Confirme sua senha:"
-            onChangeText={setRepetirSenha}
-            value={repetirSenha}
-            secureTextEntry // faz com que o campo seja senha com *
-            error={erro.repetirSenha}
-          />
-          <View
-            style={{
-              paddingVertical: 20,
-            }}
-          >
-            <Text style={styles.textin}>Dados Pessoais: </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite seu cep somente numeros"
-              onChangeText={setCep}
-              value={cep}
-              onBlur={buscaCEP} // quando o campo perde o foco, busca o CEP
-              keyboardType="numeric" // abre o teclado numérico no celular
-              maxLength={8} // máximo de 8 caracteres
-              error={erro.cep}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Digite seu logradouro:"
-              onChangeText={setLogradouro}
-              value={logradouro}
-              error={erro.logradouro}
-            />
+          {/* Modal */}
+          <Portal>
+            <Modal
+              visible={visible}
+              onDismiss={hideModal}
+              contentContainerStyle={{ backgroundColor: "white", padding: 20 }}
+            >
+              <Text>{errorMessage}</Text>
+              <Button onPress={hideModal}>Fechar</Button>
+            </Modal>
+          </Portal>
+          {/* FIM Modal */}
+          <View style={styles.container}>
+            <View style={styles.innerContainer}>
+              <Text style={styles.textin}>Faça seu Registro:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Digite seu nome:"
+                onChangeText={setNome}
+                value={nome}
+                error={erro.nome}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Digite seu e-mail:"
+                onChangeText={setEmail}
+                value={email}
+                error={erro.email}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Digite sua senha:"
+                onChangeText={setSenha}
+                value={senha}
+                secureTextEntry // faz com que o campo seja senha com *
+                error={erro.senha}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirme sua senha:"
+                onChangeText={setRepetirSenha}
+                value={repetirSenha}
+                secureTextEntry // faz com que o campo seja senha com *
+                error={erro.repetirSenha}
+              />
+              <View
+                style={{
+                  paddingVertical: 20,
+                }}
+              >
+                <Text style={styles.textin}>Dados Pessoais: </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Digite seu cep somente numeros"
+                  onChangeText={setCep}
+                  value={cep}
+                  onBlur={buscaCEP} // quando o campo perde o foco, busca o CEP
+                  keyboardType="numeric" // abre o teclado numérico no celular
+                  maxLength={8} // máximo de 8 caracteres
+                  error={erro.cep}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Digite seu logradouro:"
+                  onChangeText={setLogradouro}
+                  value={logradouro}
+                  error={erro.logradouro}
+                />
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <TextInput
+                  style={{
+                    ...styles.input, // utilização do spread operator ou operador de propagação
+                    width: "70%",
+                  }}
+                  placeholder="cidade:"
+                  onChangeText={setCidade}
+                  value={cidade}
+                  error={erro.cidade}
+                />
+                <TextInput
+                  placeholder="Estado:"
+                  onChangeText={setEstado}
+                  value={estado}
+                  style={{
+                    ...styles.input,
+                    width: "30%",
+                  }}
+                  maxLength={2} // máximo de 2 caracteres
+                  error={erro.estado}
+                />
+              </View>
+              <Button onPress={realizaRegistro} mode="outlined">
+                Fazer Login
+              </Button>
+              <Button onPress={() => navigation.navigate("LoginScreen")}>
+                Voltar ao Login
+              </Button>
+            </View>
           </View>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <TextInput
-              style={{
-                ...styles.input, // utilização do spread operator ou operador de propagação
-                width: "70%",
-              }}
-              placeholder="cidade:"
-              onChangeText={setCidade}
-              value={cidade}
-              error={erro.cidade}
-            />
-            <TextInput
-              placeholder="Estado:"
-              onChangeText={setEstado}
-              value={estado}
-              style={{
-                ...styles.input,
-                width: "30%",
-              }}
-              maxLength={2} // máximo de 2 caracteres
-              error={erro.estado}
-            />
-          </View>
-          <Button onPress={realizaRegistro} mode="outlined">
-            Fazer Login
-          </Button>
-          <Button onPress={() => navigation.navigate("LoginScreen")}>
-            Voltar ao Login
-          </Button>
         </View>
-      </View>
+      </Surface>
     </ScrollView>
   );
 }
